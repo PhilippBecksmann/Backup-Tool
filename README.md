@@ -103,6 +103,46 @@ python wsgi.py
 Danach im Browser `http://127.0.0.1:5000/` öffnen. `debug` ist absichtlich
 auf `False` gesetzt.
 
+## Schnellstart
+
+Für den bequemen Start gibt es das Bootstrap-Skript `start.sh`, das alles in
+einem Kommando erledigt:
+
+```bash
+./start.sh
+```
+
+Das Skript ist idempotent und übernimmt automatisch:
+
+- **venv:** Fehlt `venv/`, wird sie mit einem gefundenen System-Python (>= 3.9)
+  angelegt. Findet sich kein passendes Python, bricht das Skript mit klarer
+  Meldung ab.
+- **Abhängigkeiten:** werden nur installiert, wenn `import flask` fehlschlägt
+  (oder mit `--reinstall` erzwungen) — via `pip install -r requirements.txt`.
+- **`.env`:** Fehlt sie, wird sie aus `.env.example` kopiert (mit Hinweis auf die
+  einzutragenden Zugangsdaten). Eine vorhandene `.env` wird **nie** überschrieben.
+- **Browser:** öffnet nach kurzer Verzögerung `http://127.0.0.1:5000` (ausschaltbar
+  mit `--no-browser`). Ein fehlender oder fehlschlagender Opener bricht den Start
+  nicht ab — die URL wird dann nur ausgegeben.
+- **Server:** startet anschließend `wsgi.py`; Beenden mit `Ctrl-C`.
+
+Optionen:
+
+| Flag           | Wirkung                                                    |
+| -------------- | ---------------------------------------------------------- |
+| `--no-browser` | Server starten, aber keinen Browser öffnen.                |
+| `--reinstall`  | Abhängigkeiten aus `requirements.txt` neu installieren.    |
+| `-h`, `--help` | Usage anzeigen und beenden (Exit 0).                       |
+
+Ein unbekanntes Flag führt zu einer Fehlermeldung samt Usage und Exit-Code 2.
+
+Optional lassen sich `HOST` und `PORT` als Umgebungsvariablen setzen; sie wirken
+jedoch nur auf die angezeigte URL. Der tatsächliche Server-Port ist in `wsgi.py`
+fest auf `127.0.0.1:5000` gesetzt.
+
+> **Windows:** `start.sh` über **Git Bash** ausführen (nicht PowerShell oder
+> cmd) — sonst wird der Shebang nicht korrekt interpretiert.
+
 ## Nutzung
 
 1. Sicherstellen, dass `BACKUP_BASE_DIR` und die WebDAV-Zugangsdaten gesetzt sind.
@@ -126,6 +166,7 @@ auf `False` gesetzt.
 │   └── static/style.css     # schlichtes CSS ohne Framework
 ├── tests/                   # pytest-Suite inkl. conftest.py-Fixtures
 ├── wsgi.py                  # Entry-Point (load_dotenv + create_app)
+├── start.sh                 # Bootstrap-Startskript (venv, Deps, .env, Server)
 ├── requirements.txt
 ├── pyproject.toml           # pytest-/coverage-Konfiguration (fail_under=80)
 ├── .env.example
