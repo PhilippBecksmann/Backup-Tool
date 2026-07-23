@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "webdav-backup-tool"
+version = "0.1.0"
+description = "Web-basiertes WebDAV-Backup-Tool (Demo)"
+requires-python = ">=3.9"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# A project-local basetemp keeps tmp_path fixtures working even when the
+# system-wide pytest temp directory is inaccessible on the host.
+addopts = "--cov=app --cov-report=term-missing --basetemp=.pytest_tmp"
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["app/templates/*", "app/static/*"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+]

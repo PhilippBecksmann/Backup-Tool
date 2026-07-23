@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Backup starten{% endblock %}
+{% block content %}
+    <section>
+        <h2>Ordner sichern</h2>
+
+        {% if not webdav_configured %}
+            <p class="notice notice-warning">
+                WebDAV ist nicht vollständig konfiguriert. Bitte
+                <code>WEBDAV_HOSTNAME</code>, <code>WEBDAV_LOGIN</code> und
+                <code>WEBDAV_PASSWORD</code> in der <code>.env</code> setzen.
+            </p>
+        {% endif %}
+
+        {% if folders %}
+            <form method="post" action="{{ url_for('main.backup') }}">
+                <fieldset>
+                    <legend>Verfügbare Unterordner</legend>
+                    {% for folder in folders %}
+                        <label class="folder-item">
+                            <input type="checkbox" name="folders" value="{{ folder }}">
+                            {{ folder }}
+                        </label>
+                    {% endfor %}
+                </fieldset>
+                <button type="submit" {% if not webdav_configured %}disabled{% endif %}>
+                    Backup starten
+                </button>
+            </form>
+        {% else %}
+            <p class="notice">Keine sicherungsfähigen Unterordner gefunden.</p>
+        {% endif %}
+    </section>
+
+    <section>
+        <h2>Verbindung</h2>
+        <form method="post" action="{{ url_for('main.test_connection') }}">
+            <button type="submit" {% if not webdav_configured %}disabled{% endif %}>
+                Verbindung testen
+            </button>
+        </form>
+    </section>
+{% endblock %}

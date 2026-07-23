@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Backup-Ergebnis{% endblock %}
+{% block content %}
+    <section>
+        <h2>Backup-Ergebnis</h2>
+
+        <p class="status {% if result.success %}status-ok{% else %}status-error{% endif %}">
+            {% if result.total == 0 %}
+                Keine Dateien zum Sichern gefunden.
+            {% elif result.success %}
+                Alle {{ result.uploaded }} Datei(en) erfolgreich gesichert.
+            {% else %}
+                {{ result.uploaded }} von {{ result.total }} Datei(en) gesichert,
+                {{ result.failed }} fehlgeschlagen.
+            {% endif %}
+        </p>
+
+        <ul class="summary">
+            <li>Gesicherte Ordner: {{ selected|join(', ') }}</li>
+            <li>Erfolgreich: {{ result.uploaded }}</li>
+            <li>Fehlgeschlagen: {{ result.failed }}</li>
+        </ul>
+
+        {% if result.errors %}
+            <h3>Fehlerdetails</h3>
+            <ul class="error-list">
+                {% for error in result.errors %}
+                    <li>
+                        <strong>{{ error.remote_path }}</strong>: {{ error.message }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <p><a href="{{ url_for('main.index') }}">Zurück zur Übersicht</a></p>
+    </section>
+{% endblock %}
