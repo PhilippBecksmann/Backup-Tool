@@ -11,7 +11,8 @@
       "Bash(./venv/Scripts/python.exe -m pytest)",
       "Bash(./venv/Scripts/python.exe -m pytest tests/test_directory_service.py::test_list_subdirectories -p no:cov)",
       "Bash(venv/Scripts/python.exe -m pytest --cov)",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "Bash(grep -nE '^#{1,3} ' README.md)"
     ]
   }
 }

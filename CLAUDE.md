@@ -2,36 +2,95 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Status
+## Überblick
 
-Dieses Projekt ist noch leer — es existieren bisher keine Quelldateien, keine
-Build-Konfiguration und kein Git-Repository. Die folgenden Abschnitte sind
-Platzhalter und sollten befuellt werden, sobald das Projekt Form annimmt.
-
-Tipp: Sobald erste Dateien vorhanden sind, `/init` erneut ausfuehren — dann
-kann eine fundierte, aus dem Code abgeleitete CLAUDE.md erzeugt werden.
+Web-basiertes WebDAV-Backup-Tool (Demo/Schulung): eine kleine Flask-App, mit der
+Nutzer Unterordner eines serverseitig konfigurierten Basisverzeichnisses auswählen
+und rekursiv auf einen WebDAV-Server hochladen. Fokus auf Einfachheit, minimales
+Setup und testbare Struktur. Python 3.9+.
 
 ## Commands
 
-<!-- Build / Run / Test / Lint hier eintragen, sobald definiert.
-     Beispiel:
-     - Build:  ...
-     - Test (alle):  ...
-     - Test (einzeln):  ...
-     - Lint:  ...
--->
+Unter Windows läuft Bash über **Git Bash** (`C:\Program Files\Git\bin\bash.exe`);
+`bash` ist nicht im PATH.
+
+- **Start (alles-in-einem, bootstrappt venv/Deps/.env):**
+  `./start.sh` (in Git Bash) bzw. aus PowerShell
+  `& "C:\Program Files\Git\bin\bash.exe" start.sh`
+  Flags: `--no-browser`, `--reinstall`, `--help`.
+- **Start (manuell):** `venv/Scripts/python.exe wsgi.py` oder `flask --app wsgi run`.
+  Bindet fest `127.0.0.1:5000`, `debug=False`.
+- **Tests (mit Coverage-Gate):** `venv/Scripts/python.exe -m pytest`
+  Coverage (`--cov=app --cov-report=term-missing --basetemp=.pytest_tmp`) und das
+  Gate `fail_under = 80` sind über `pyproject.toml` bereits voreingestellt — keine
+  Extra-Flags nötig.
+- **Einzelner Test:** `... -m pytest tests/test_backup.py::test_name` oder gefiltert
+  mit `-k "muster"`.
+- **Abhängigkeiten:** `venv/Scripts/python.exe -m pip install -r requirements.txt`.
+
+Es ist **kein Linter/Formatter** konfiguriert. `--basetemp=.pytest_tmp` ist bewusst
+gesetzt, weil das systemweite pytest-Temp-Verzeichnis auf dem Host teils gesperrt ist.
 
 ## Architecture
 
-<!-- High-Level-Architektur beschreiben, sobald Struktur existiert:
-     - Einstiegspunkt(e)
-     - Wichtigste Module und ihr Zusammenspiel
-     - Datenfluss / zentrale Abstraktionen
--->
+Flask-**App-Factory** (`app/__init__.py`, `create_app(config_overrides)`): baut ein
+`Config`-Objekt, legt es unter `app.config["APP_CONFIG"]` ab und registriert das
+Blueprint aus `routes.py`. `config_overrides` erlaubt Tests, Konfiguration ohne
+Umgebungsvariablen zu injizieren.
+
+Bewusst **geschichtet**, mit einer harten Grenze zwischen Web- und Kernschicht:
+
+- `app/routes.py` — einzige Flask-/HTTP-Schicht. Views `GET /`, `POST /backup`,
+  `POST /test-connection`. Übersetzt Ausnahmen der Kernschicht in Flash-Messages.
+- `app/backup.py` — **Flask-freie** Kernlogik. `run_backup()` läuft Dateien via
+  `rglob` ab, bildet Remote-Pfade `/<ordnername>/<relativer-pfad>`, ruft
+  `ensure_dir` + `upload_file`. Einzelne Datei-Fehler werden in `BackupResult`
+  gesammelt (Run läuft weiter); Verbindungsfehler propagieren und brechen den Run
+  sauber ab. Der Client ist über das `BackupClient`-`Protocol` entkoppelt (DI).
+- `app/directory_service.py` — **Flask-frei**. Listet Unterordner und löst Auswahl-
+  namen sicher auf. **Path-Traversal-Schutz**: nur direkte Kind-Ordner werden
+  akzeptiert (`resolve()` + `is_relative_to(base)`, Ablehnung von `..`, Pfad-
+  trennern, absoluten Pfaden, Symlinks). Wirft `DirectoryError`.
+- `app/webdav_client.py` — dünner Wrapper um `webdav3.client.Client`. Übersetzt jede
+  `WebDavException` in `WebDavClientError` und nimmt **nie Credentials** in
+  Fehlermeldungen auf (nur `type(exc).__name__`). `ensure_dir` ist idempotent.
+- `app/config.py` — **Flask-frei**. Liest ausschließlich aus der Umgebung/`.env`
+  (`WEBDAV_*`, `BACKUP_BASE_DIR`, `SECRET_KEY`). `is_webdav_configured()` ist das
+  Gate, das die Views vor jedem WebDAV-Zugriff prüfen.
+- `app/templates/`, `app/static/style.css` — self-contained UI (kein CDN/JS-Framework,
+  Inline-SVG-Icons, Light/Dark via `prefers-color-scheme`).
+- `wsgi.py` — Einstieg: `load_dotenv()` + `create_app()`.
+
+**Datenfluss eines Backups:** `routes.backup` → `run_backup(client, base_dir,
+selected)` → `resolve_selections` (Traversal-Check) → pro Ordner `ensure_dir` +
+`upload_file` → `BackupResult` → `result.html`.
+
+**Tests** mocken den WebDAV-Server nie über das Netz: `tests/conftest.py` stellt
+`FakeWebDav` (zeichnet `ensure_dir`/`upload_file` auf, kann gezielt Fehler werfen),
+`tmp_base_dir` (realer Ordnerbaum) sowie `app`/`client` (via `create_app`-Overrides)
+bereit. Neue Tests folgen diesem Muster statt echter Verbindungen.
 
 ## Conventions
 
-<!-- Projektspezifische Konventionen, die sich nicht aus dem Code ergeben. -->
+- **Kernschicht Flask-frei halten:** `backup.py`, `directory_service.py`, `config.py`
+  importieren **kein** Flask. Diese Grenze ist die Testbarkeits-Basis — nicht
+  aufweichen.
+- **Coverage-Gate ≥ 80 %** wird über `fail_under` erzwungen; Änderungen müssen es
+  halten. `app/templates/*` und `app/static/*` sind von der Coverage ausgenommen.
+- **Template-Invarianten:** `tests/test_routes.py` prüft sichtbare Strings, Formular-
+  `name`/`action`-Attribute und Flash-Kategorien. Beim Ändern von Templates diese
+  erhalten und **kein `|safe`/`autoescape false`** einführen (Autoescaping = XSS-Schutz).
+- **Secrets nur aus `.env`:** `.env` ist in `.gitignore`; nur `.env.example` ist
+  eingecheckt. Passwörter nie rendern/loggen/in Fehlermeldungen aufnehmen.
+- **`start.sh` mit LF-Zeilenenden** speichern (CRLF bricht den Shebang unter Git Bash).
+
+## Projektlokale Skills
+
+- **`/python-security-check`** (`.claude/skills/python-security-check/`) — statisches
+  Security-Review des gesamten Python-Codes: findet Schwachstellen, priorisiert sie nach
+  HIGH/MEDIUM/LOW und schlägt konkrete Fixes vor. Reine **Analyse** (verändert keinen Code),
+  läuft daher **nicht** über die Implementierungs-Pipeline. Wird per Slash-Command oder
+  automatisch bei Security-Audit-/Vulnerability-Scan-Anfragen aufgerufen.
 
 ## Agent Team Pipeline (VERBINDLICH für alle Implementierungsaufgaben)
 
@@ -74,12 +133,10 @@ Die Agenten sind definiert in `.claude/agents/`:
   `README.md`).
 - Der Finalizer läuft nur nach „Validierung: BESTANDEN".
 - Commit/Push sind für diese Pipeline dauerhaft autorisiert — der Finalizer fragt nicht
-  nach. Voraussetzung ist ein initialisiertes Git-Repository mit Remote (siehe Hinweis
-  unten).
+  nach.
 - Reine Nicht-Implementierungsaufgaben (Fragen beantworten, Doku lesen, Recherche ohne
   Codeänderung) benötigen die Pipeline nicht.
 
-> Hinweis: Dieses Projekt hat aktuell **kein Git-Repository**. Bevor der Finalizer
-> pushen kann, sind einmalig `git init`, ein erster Commit und ein konfigurierter
-> Remote (`git remote add origin …`) nötig. Ohne Remote meldet der Finalizer den
-> fehlenden Push, statt still fehlzuschlagen.
+> Git-Status: Repository ist initialisiert (Branch `main`), Remote `origin` =
+> `https://github.com/PhilippBecksmann/Backup-Tool.git` mit gesetztem Upstream. Der
+> Finalizer kann direkt committen und pushen.
