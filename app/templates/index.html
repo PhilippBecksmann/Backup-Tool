@@ -6,9 +6,18 @@
 
         {% if not webdav_configured %}
             <p class="notice notice-warning">
-                WebDAV ist nicht vollständig konfiguriert. Bitte
-                <code>WEBDAV_HOSTNAME</code>, <code>WEBDAV_LOGIN</code> und
-                <code>WEBDAV_PASSWORD</code> in der <code>.env</code> setzen.
+                <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                     stroke-linejoin="round" aria-hidden="true" focusable="false">
+                    <path d="M12 3l9 16H3z"></path>
+                    <path d="M12 10v4"></path>
+                    <path d="M12 17h.01"></path>
+                </svg>
+                <span>
+                    WebDAV ist nicht vollständig konfiguriert. Bitte
+                    <code>WEBDAV_HOSTNAME</code>, <code>WEBDAV_LOGIN</code> und
+                    <code>WEBDAV_PASSWORD</code> in der <code>.env</code> setzen.
+                </span>
             </p>
         {% endif %}
 
@@ -16,26 +25,58 @@
             <form method="post" action="{{ url_for('main.backup') }}">
                 <fieldset>
                     <legend>Verfügbare Unterordner</legend>
-                    {% for folder in folders %}
-                        <label class="folder-item">
-                            <input type="checkbox" name="folders" value="{{ folder }}">
-                            {{ folder }}
-                        </label>
-                    {% endfor %}
+                    <div class="folder-grid">
+                        {% for folder in folders %}
+                            <label class="folder-tile">
+                                <input type="checkbox" name="folders" value="{{ folder }}">
+                                <svg class="folder-icon" width="1em" height="1em" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="1.8"
+                                     stroke-linecap="round" stroke-linejoin="round"
+                                     aria-hidden="true" focusable="false">
+                                    <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                </svg>
+                                <span>{{ folder }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
                 </fieldset>
-                <button type="submit" {% if not webdav_configured %}disabled{% endif %}>
+                <button type="submit" class="btn btn-primary" {% if not webdav_configured %}disabled{% endif %}>
+                    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                         stroke-linejoin="round" aria-hidden="true" focusable="false">
+                        <path d="M7 18a4 4 0 0 1-.5-7.97A5.5 5.5 0 0 1 17 9.5a3.5 3.5 0 0 1 .5 6.98"></path>
+                        <path d="M12 18v-6"></path>
+                        <path d="M9 15l3-3 3 3"></path>
+                    </svg>
                     Backup starten
                 </button>
             </form>
         {% else %}
-            <p class="notice">Keine sicherungsfähigen Unterordner gefunden.</p>
+            <p class="notice">
+                <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                     stroke-linejoin="round" aria-hidden="true" focusable="false">
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <path d="M12 8v5"></path>
+                    <path d="M12 16h.01"></path>
+                </svg>
+                <span>Keine sicherungsfähigen Unterordner gefunden.</span>
+            </p>
         {% endif %}
     </section>
 
     <section>
         <h2>Verbindung</h2>
         <form method="post" action="{{ url_for('main.test_connection') }}">
-            <button type="submit" {% if not webdav_configured %}disabled{% endif %}>
+            <button type="submit" class="btn btn-secondary" {% if not webdav_configured %}disabled{% endif %}>
+                <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                     stroke-linejoin="round" aria-hidden="true" focusable="false">
+                    <path d="M9 3v5"></path>
+                    <path d="M15 3v5"></path>
+                    <path d="M7 8h10v3a5 5 0 0 1-10 0z"></path>
+                    <path d="M12 16v5"></path>
+                </svg>
                 Verbindung testen
             </button>
         </form>

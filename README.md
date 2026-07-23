@@ -18,6 +18,24 @@ testbaren Struktur (Coverage >= 80 %). Die Kernlogik (`app/backup.py`,
 - Robuste Fehlerbehandlung: einzelne fehlgeschlagene Dateien brechen das Backup
   nicht ab; Verbindungs-/Verzeichnisfehler brechen sauber ab.
 
+## Oberfläche / UI
+
+Die Weboberfläche ist bewusst modern und ohne externe Abhängigkeiten gestaltet:
+
+- Karten-Layout mit Gradient-Header und Inline-SVG-Icons (Cloud-Upload, Ordner,
+  Plug, Status). Keine externen Fonts, CDNs oder JavaScript-Bibliotheken — alles
+  ist self-contained in `app/static/style.css` und den Templates.
+- Automatischer **Light-/Dark-Mode** über `prefers-color-scheme`; das gesamte
+  Styling basiert auf CSS-Custom-Properties.
+- **Responsive** ab ca. 320 px Breite (Ordner-Kacheln und Statistik-Grid brechen
+  auf schmalen Displays einspaltig um).
+- Barrierefreiheit: AA-Kontraste, sichtbarer `:focus-visible`-Ring,
+  `label`-verknüpfte Checkboxen, `role="alert"`/`role="status"` für Meldungen,
+  `aria-hidden` an dekorativen SVGs sowie Respektierung von
+  `prefers-reduced-motion`.
+- Ordnerauswahl als klickbare Kacheln; der Auswahlzustand wird rein per CSS
+  (`:has(input:checked)`) dargestellt und funktioniert ohne JavaScript.
+
 ## Nicht-Ziele (bewusst außerhalb des Umfangs)
 
 Kein Download/Restore, keine Inkremental-Logik, keine Nutzerverwaltung/Login,

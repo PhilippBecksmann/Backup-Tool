@@ -4,21 +4,48 @@
     <section>
         <h2>Backup-Ergebnis</h2>
 
-        <p class="status {% if result.success %}status-ok{% else %}status-error{% endif %}">
-            {% if result.total == 0 %}
-                Keine Dateien zum Sichern gefunden.
-            {% elif result.success %}
-                Alle {{ result.uploaded }} Datei(en) erfolgreich gesichert.
+        <p class="status {% if result.success %}status-ok{% else %}status-error{% endif %}" role="status">
+            {% if result.success %}
+                <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                     stroke-linejoin="round" aria-hidden="true" focusable="false">
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <path d="M8.5 12.5l2.5 2.5 4.5-5"></path>
+                </svg>
             {% else %}
-                {{ result.uploaded }} von {{ result.total }} Datei(en) gesichert,
-                {{ result.failed }} fehlgeschlagen.
+                <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                     stroke-linejoin="round" aria-hidden="true" focusable="false">
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <path d="M15 9l-6 6"></path>
+                    <path d="M9 9l6 6"></path>
+                </svg>
             {% endif %}
+            <span>
+                {% if result.total == 0 %}
+                    Keine Dateien zum Sichern gefunden.
+                {% elif result.success %}
+                    Alle {{ result.uploaded }} Datei(en) erfolgreich gesichert.
+                {% else %}
+                    {{ result.uploaded }} von {{ result.total }} Datei(en) gesichert,
+                    {{ result.failed }} fehlgeschlagen.
+                {% endif %}
+            </span>
         </p>
 
-        <ul class="summary">
-            <li>Gesicherte Ordner: {{ selected|join(', ') }}</li>
-            <li>Erfolgreich: {{ result.uploaded }}</li>
-            <li>Fehlgeschlagen: {{ result.failed }}</li>
+        <ul class="stats">
+            <li class="stat">
+                <span class="stat-label">Gesicherte Ordner</span>
+                <span class="stat-value">{{ selected|join(', ') }}</span>
+            </li>
+            <li class="stat">
+                <span class="stat-label">Erfolgreich</span>
+                <span class="stat-value">{{ result.uploaded }}</span>
+            </li>
+            <li class="stat">
+                <span class="stat-label">Fehlgeschlagen</span>
+                <span class="stat-value">{{ result.failed }}</span>
+            </li>
         </ul>
 
         {% if result.errors %}
@@ -32,6 +59,15 @@
             </ul>
         {% endif %}
 
-        <p><a href="{{ url_for('main.index') }}">Zurück zur Übersicht</a></p>
+        <p class="actions">
+            <a class="btn btn-secondary" href="{{ url_for('main.index') }}">
+                <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                     stroke-linejoin="round" aria-hidden="true" focusable="false">
+                    <path d="M15 6l-6 6 6 6"></path>
+                </svg>
+                Zurück zur Übersicht
+            </a>
+        </p>
     </section>
 {% endblock %}
