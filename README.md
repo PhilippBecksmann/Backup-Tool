@@ -165,10 +165,13 @@ fest auf `127.0.0.1:5000` gesetzt.
 │   ├── templates/           # base.html, index.html, result.html
 │   └── static/style.css     # schlichtes CSS ohne Framework
 ├── tests/                   # pytest-Suite inkl. conftest.py-Fixtures
+├── .github/workflows/       # CI: tests.yml (pytest + Coverage-Gate)
+├── .githooks/pre-commit     # Git-Hook: Tests vor jedem Commit
 ├── wsgi.py                  # Entry-Point (load_dotenv + create_app)
-├── start.sh                 # Bootstrap-Startskript (venv, Deps, .env, Server)
+├── start.sh                 # Bootstrap-Startskript (venv, Deps, .env, Hook, Server)
 ├── requirements.txt
 ├── pyproject.toml           # pytest-/coverage-Konfiguration (fail_under=80)
+├── .gitattributes           # LF-Zeilenenden für Shell-Skripte/Hooks
 ├── .env.example
 └── .gitignore
 ```
@@ -188,6 +191,20 @@ Hinweis: Die Tests schreiben ihre temporären Dateien in ein projektlokales
 damit `tmp_path`-Fixtures unabhängig vom systemweiten Temp-Verzeichnis
 funktionieren. Der Symlink-Test wird unter Windows übersprungen, da das Anlegen
 von Symlinks dort erhöhte Rechte erfordert.
+
+### Automatische Ausführung
+
+Die Suite läuft nach jeder Änderung automatisch — über drei sich ergänzende
+Mechanismen:
+
+- **Git pre-commit-Hook** (`.githooks/pre-commit`) — erzwingt die Tests vor jedem
+  Commit und blockiert ihn bei Fehlern. Einmalig aktivieren mit
+  `git config core.hooksPath .githooks`; `start.sh` erledigt das beim Bootstrap
+  automatisch. Notfall-Umgehung: `git commit --no-verify`.
+- **GitHub Actions CI** (`.github/workflows/tests.yml`) — führt die Suite bei jedem
+  Push/PR auf `main` über Python 3.9–3.12 aus.
+- **Claude-Code Stop-Hook** (`.claude/settings.json`) — führt die Tests am Ende jeder
+  Claude-Code-Sitzung aus.
 
 ## Sicherheitshinweise
 

@@ -127,6 +127,20 @@ if [ ! -f ".env" ]; then
   fi
 fi
 
+# --- Git pre-commit Hook aktivieren (Tests vor jedem Commit) ------------------
+# Setzt core.hooksPath auf .githooks, sodass der versionierte pre-commit-Hook
+# ohne manuelle Kopie nach .git/hooks aktiv wird. Nur, wenn wir in einem Git-
+# Repo sind und der Hook existiert; Fehler brechen den Start nie ab.
+if [ -f ".githooks/pre-commit" ] && command -v git >/dev/null 2>&1; then
+  if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    current_hooks_path="$(git config --get core.hooksPath || true)"
+    if [ "$current_hooks_path" != ".githooks" ]; then
+      git config core.hooksPath .githooks && \
+        echo "Hinweis: Git pre-commit-Hook aktiviert (core.hooksPath=.githooks)."
+    fi
+  fi
+fi
+
 # --- HOST/PORT + URL ---------------------------------------------------------
 HOST="${HOST:-127.0.0.1}"
 PORT="${PORT:-5000}"

@@ -1,0 +1,38 @@
+name: Tests
+
+# Führt die Testsuite mit Coverage-Gate bei jedem Push/PR auf main aus
+# ("regelmäßige" automatische Ausführung). Das Gate (fail_under = 80) und die
+# Coverage-Flags stehen in pyproject.toml — hier sind keine Extra-Flags nötig.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run test suite with coverage
+        run: python -m pytest

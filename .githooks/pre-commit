@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+#
+# Git pre-commit Hook: führt vor jedem Commit die Testsuite mit Coverage aus.
+# Schlägt ein Test fehl oder unterschreitet die Coverage das Gate (fail_under),
+# bricht pytest mit Exit-Code != 0 ab und der Commit wird blockiert.
+#
+# Aktivierung (einmalig, wird auch von start.sh automatisch gesetzt):
+#   git config core.hooksPath .githooks
+#
+# Überspringen im Notfall:  git commit --no-verify
+#
+# Hinweis (Windows): läuft über Git Bash. Als LF gespeichert (siehe .gitattributes).
+
+set -euo pipefail
+
+# venv-Python robust auflösen (Windows: Scripts/, Unix: bin/), sonst System-Python.
+if [ -x "venv/Scripts/python.exe" ] || [ -f "venv/Scripts/python.exe" ]; then
+  PYTHON="venv/Scripts/python.exe"
+elif [ -x "venv/bin/python" ]; then
+  PYTHON="venv/bin/python"
+else
+  PYTHON="python"
+fi
+
+echo "pre-commit: führe Testsuite aus ($PYTHON -m pytest) ..."
+"$PYTHON" -m pytest
