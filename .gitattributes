@@ -1,0 +1,4 @@
+# Shell-Skripte und Git-Hooks müssen LF-Zeilenenden behalten, sonst bricht der
+# Shebang unter Git Bash (siehe CLAUDE.md-Konvention zu start.sh).
+*.sh          text eol=lf
+.githooks/*   text eol=lf

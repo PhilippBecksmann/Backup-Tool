@@ -23,13 +23,35 @@ Unter Windows läuft Bash über **Git Bash** (`C:\Program Files\Git\bin\bash.exe
 - **Tests (mit Coverage-Gate):** `venv/Scripts/python.exe -m pytest`
   Coverage (`--cov=app --cov-report=term-missing --basetemp=.pytest_tmp`) und das
   Gate `fail_under = 80` sind über `pyproject.toml` bereits voreingestellt — keine
-  Extra-Flags nötig.
+  Extra-Flags nötig. Die Suite umfasst 68 Tests (je ein Modul pro `app/*.py`) und
+  liegt bei ~99 % Coverage; ein Symlink-Test wird unter Windows übersprungen
+  (`skipif win32`), läuft aber in der Linux-CI und deckt dort die restlichen Zeilen ab.
 - **Einzelner Test:** `... -m pytest tests/test_backup.py::test_name` oder gefiltert
   mit `-k "muster"`.
 - **Abhängigkeiten:** `venv/Scripts/python.exe -m pip install -r requirements.txt`.
 
 Es ist **kein Linter/Formatter** konfiguriert. `--basetemp=.pytest_tmp` ist bewusst
 gesetzt, weil das systemweite pytest-Temp-Verzeichnis auf dem Host teils gesperrt ist.
+
+### Automatische Testausführung
+
+Die Tests laufen **automatisch nach jeder Implementierung** über drei Mechanismen —
+sie ergänzen sich (lokal sofort, vor Commit erzwungen, in der Cloud regelmäßig):
+
+1. **Claude-Code Stop-Hook** (`.claude/settings.json`): führt am Ende jeder
+   Claude-Code-Antwort `venv/Scripts/python.exe -m pytest -q` aus, sodass Testfehler
+   direkt nach einer Änderung sichtbar werden. Team-weit, weil in der eingecheckten
+   `settings.json` (nicht in der persönlichen `settings.local.json`).
+2. **Git pre-commit-Hook** (`.githooks/pre-commit`): erzwingt die Suite vor jedem
+   Commit und blockiert ihn bei Fehlern/Coverage-Unterschreitung. Aktivierung einmalig
+   via `git config core.hooksPath .githooks` — `start.sh` setzt das beim Bootstrap
+   automatisch. Umgehen im Notfall: `git commit --no-verify`.
+3. **GitHub Actions CI** (`.github/workflows/tests.yml`): läuft bei jedem Push/PR auf
+   `main` (plus `workflow_dispatch`) über die Python-Matrix 3.9–3.12 und erzwingt
+   dasselbe Coverage-Gate.
+
+`.githooks/pre-commit` und `start.sh` müssen **LF-Zeilenenden** behalten (via
+`.gitattributes` abgesichert), sonst bricht der Shebang unter Git Bash.
 
 ## Architecture
 
