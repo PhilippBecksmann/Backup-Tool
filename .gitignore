@@ -22,3 +22,6 @@ venv/
 .idea/
 .vscode/
 .DS_Store
+
+# Lokale Claude-Code-Einstellungen
+.claude/settings.local.json
